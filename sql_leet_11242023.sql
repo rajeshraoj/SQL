@@ -65,3 +65,94 @@ INNER JOIN (SELECT
             WHERE fruit = 'oranges'
             GROUP BY 1) O 
 ON A.sale_date = O.sale_date
+
+##### Super
+
+select sale_date, sum(if(fruit='apples', sold_num, 0)) -  sum(if(fruit='oranges', sold_num, 0))  as diff
+from sales
+group by sale_date
+
+################### 534
+
+SELECT
+    player_id,
+    event_date,
+    SUM(games_played) OVER(PARTITION BY player_id ORDER BY event_date) games_played_so_far
+FROM Activity
+
+#######################3 2228
+
+WITH cte AS (
+SELECT
+    *,
+    IF(DATEDIFF(LEAD(purchase_date,1) OVER(PARTITION BY user_id ORDER BY purchase_date),purchase_date) <= 7,1,0)  sel
+FROM Purchases)
+SELECT
+    DISTINCT user_id
+FROM cte WHERE sel = 1
+ORDER BY 1
+
+########### Using Self Join
+select distinct p1.user_id
+from purchases p1
+inner join
+purchases p2
+on p1.user_id=p2.user_id and p1.purchase_id<>p2.purchase_id
+and abs(datediff(p1.purchase_date, p2.purchase_date))<=7
+order by p1.user_id
+
+
+######################  1132
+
+WITH cte AS (
+SELECT 
+ *
+FROM (
+SELECT
+ post_id,
+ action_date
+FROM Actions
+WHERE action = 'report' and extra = 'spam') A
+LEFT OUTER JOIN (
+    SELECT post_id as rem
+    FROM Removals
+) B ON (A.post_id = B.rem)),
+cte2 as (
+SELECT
+    count(distinct rem)/COUNT(distinct post_id) cnt from cte
+    group by action_date)
+SELECT round(avg(cnt)*100,2) average_daily_percent from cte2
+
+
+#################################### 1098
+
+select b.book_id, b.name
+from books b left join
+    (select book_id, sum(quantity) as book_sold
+    from Orders 
+    where dispatch_date between '2018-06-23' and '2019-06-23'
+    group by book_id) t
+on b.book_id = t.book_id
+where available_from < '2019-05-23'
+and (book_sold is null or book_sold <10)
+order by b.book_id;
+
+
+######################## 2308
+
+WITH cte AS (
+SELECT
+    user_id,
+    gender,
+    CASE 
+        WHEN gender='female' then 1 
+        WHEN gender='male'  then 3
+        ELSE 2 END ordr,
+    RANK() OVER(partition by gender order by user_id) rnk
+FROM Genders
+)
+SELECT 
+    user_id,
+    gender
+FROM cte
+ORDER BY rnk, ordr
