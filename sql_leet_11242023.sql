@@ -156,3 +156,24 @@ SELECT
     gender
 FROM cte
 ORDER BY rnk, ordr
+
+################ 1285
+
+SELECT log_id - num,min(log_id) as start_id, max(log_id) as end_id
+FROM
+(SELECT log_id, ROW_NUMBER() OVER(ORDER BY log_id) as num
+FROM Logs) a
+GROUP BY log_id - num
+
+
+##########33 2324
+
+WITH cte AS (
+SELECT
+    U.user_id,
+    U.product_id,
+    rank() over(PARTITION BY U.user_id ORDER BY sum(U.quantity * P.price)DESC) rnk
+FROM Sales U
+INNER JOIN Product P ON (U.product_id = P.product_id)
+GROUP BY 1,2)
+SELECT user_id, product_id FROM cte WHERE rnk = 1
